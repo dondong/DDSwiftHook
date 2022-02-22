@@ -55,24 +55,11 @@ extension AnyClassMetadata {
     }
     
     static func getName(_ cls: UnsafePointer<AnyClassMetadata>) -> String {
-        let name = class_getName(cls as? AnyClass);
+        var clsVar = cls;
+        let anyClassPtr = withUnsafePointer(to: &clsVar) { $0 };
+        let name = class_getName(UnsafeRawPointer.init(anyClassPtr).load(as:AnyClass.self));
         return String.init(cString:name);
     }
-    
-//    fileprivate static func getClassName(_ ro: uintptr_t) ->String {
-//        let mask: UInt64 = 0x00007ffffffffff8;
-//        let addr = UInt64(ro) & mask;
-//        let ptr = UnsafeRawPointer.init(bitPattern:UInt(addr))!;
-//        let flags = ptr.load(as:UInt32.self);
-//        var roPtr: UnsafeRawPointer = ptr;
-//        if ((flags & (1<<31)) > 0) {
-//            roPtr = UnsafeRawPointer.init(bitPattern:ptr.load(fromByteOffset:8, as:UInt.self))!;
-//        }
-//        let nameAddr = roPtr.advanced(by:5 * MemoryLayout.size(ofValue:UInt8.self)).load(as:UInt.self);
-//        let namePtr = UnsafePointer<CChar>.init(bitPattern:nameAddr)!;
-//        let cls = roPtr as? AnyClass;
-//        return String.init(cString:namePtr);
-//    }
 }
 
 extension ClassMetadata {
@@ -86,5 +73,17 @@ extension ClassMetadata {
     
     func getDescriptor() -> UnsafePointer<ClassDescriptor> {
         return DDSwiftRuntime.getData(self.description)!;
+    }
+    
+    static func getName(_ cls: UnsafePointer<ClassMetadata>) -> String {
+        var clsVar = cls;
+        let anyClassPtr = withUnsafePointer(to: &clsVar) { $0 };
+        let name = class_getName(UnsafeRawPointer.init(anyClassPtr).load(as:AnyClass.self));
+        return String.init(cString:name);
+    }
+    
+    static func getFunctionTable(_ cls: UnsafePointer<ClassMetadata>) -> UnsafeBufferPointer<OpaquePointer> {
+        let size = (cls.pointee.classSize - 80 - cls.pointee.classAddressPoint) / 8;
+        return UnsafeBufferPointer.init(start:UnsafePointer<OpaquePointer>.init(OpaquePointer(cls.advanced(by:1))), count:Int(size));
     }
 }
