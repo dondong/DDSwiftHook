@@ -15,14 +15,14 @@ class DDSwiftRuntime {
     
     static func getObjcClass(_ cls: AnyClass) -> UnsafePointer<AnyClassMetadata> {
         let ptr = Unmanaged.passUnretained(cls as AnyObject).toOpaque();
-        return UnsafePointer<AnyClassMetadata>.init(OpaquePointer.init(ptr));
+        return UnsafePointer<AnyClassMetadata>.init(OpaquePointer(ptr));
     }
     
     static func getSwiftClass(_ cls: AnyClass) -> UnsafePointer<ClassMetadata>? {
         let opaquePtr = Unmanaged.passUnretained(cls as AnyObject).toOpaque();
-        let ptr = UnsafePointer<AnyClassMetadata>.init(OpaquePointer.init(opaquePtr));
+        let ptr = UnsafePointer<AnyClassMetadata>.init(OpaquePointer(opaquePtr));
         if (ptr.pointee.isSwiftMetadata()) {
-            return Optional(UnsafePointer<ClassMetadata>.init(OpaquePointer.init(opaquePtr)));
+            return Optional(UnsafePointer<ClassMetadata>.init(OpaquePointer(opaquePtr)));
         } else {
             return nil;
         }
@@ -30,10 +30,10 @@ class DDSwiftRuntime {
 }
 extension ClassDescriptor {
     static func getName(_ data: UnsafePointer<ClassDescriptor>) -> String {
-        let ptr = UnsafeRawPointer.init(OpaquePointer.init(data)!);
+        let ptr = UnsafeRawPointer(OpaquePointer.init(data)!);
         let nameAddr = UInt(bitPattern:ptr) + 4 + UInt(ptr.load(fromByteOffset:4, as:Int32.self));
-        let namePtr = UnsafePointer<CChar>.init(bitPattern:nameAddr)!;
-        return String.init(cString:namePtr);
+        let namePtr = UnsafePointer<CChar>(bitPattern:nameAddr)!;
+        return String(cString:namePtr);
     }
 }
 
@@ -57,8 +57,8 @@ extension AnyClassMetadata {
     static func getName(_ cls: UnsafePointer<AnyClassMetadata>) -> String {
         var clsVar = cls;
         let anyClassPtr = withUnsafePointer(to: &clsVar) { $0 };
-        let name = class_getName(UnsafeRawPointer.init(anyClassPtr).load(as:AnyClass.self));
-        return String.init(cString:name);
+        let name = class_getName(UnsafeRawPointer(anyClassPtr).load(as:AnyClass.self));
+        return String(cString:name);
     }
 }
 
