@@ -10,7 +10,11 @@ import MachO
 
 class DDSwiftRuntime {
     static func getData<T>(_ address: Pointer) -> UnsafePointer<T>? {
-        return UnsafePointer<T>.init(OpaquePointer.init(bitPattern:address));
+        return UnsafePointer<T>(OpaquePointer.init(bitPattern:address));
+    }
+    
+    static func getData<T>(_ address: OpaquePointer) -> UnsafePointer<T>? {
+        return UnsafePointer<T>(address);
     }
     
     static func getObjcClass(_ cls: AnyClass) -> UnsafePointer<AnyClassMetadata> {
@@ -109,22 +113,27 @@ extension TypeContextClassDescriptorKind {
 extension TypeContextClassDescriptor : TypeContextClassDescriptorKind {
 }
 extension ClassDescriptor : TypeContextClassDescriptorKind {
-    fileprivate func _getVtableOffset() -> Int {
-        var offset = Int(MemoryLayout.size(ofValue:TypeGenericContextDescriptorHeader.self));
-        if (self.getFlags().hasResilientSuperclass) {
-            offset += Int(MemoryLayout.size(ofValue:ResilientSuperclass.self));
+    fileprivate static func _getVtableOffset(_ data: UnsafePointer<ClassDescriptor>) -> Int {
+        let ptr = UnsafePointer<TypeGenericContextDescriptorHeader>(OpaquePointer(data.advanced(by:1)));
+        var pad = Int(ptr.pointee.base.numParams % 4);
+        if (pad > 0) {
+            pad = 4 - pad;
         }
-        if (self.getFlags().hasForeignMetadataInitialization) {
-            offset += Int(MemoryLayout.size(ofValue:ForeignMetadataInitialization.self));
+        var offset = MemoryLayout<TypeGenericContextDescriptorHeader>.size + Int(ptr.pointee.base.numParams) + pad + 3 * 4 * Int(ptr.pointee.base.numRequirements) + 4;
+        if (data.pointee.getFlags().hasResilientSuperclass) {
+            offset += MemoryLayout<ResilientSuperclass>.size;
         }
-        if (self.getFlags().hasSingletonMetadataInitialization) {
-            offset += Int(MemoryLayout.size(ofValue:SingletonMetadataInitialization.self));
+        if (data.pointee.getFlags().hasForeignMetadataInitialization) {
+            offset += MemoryLayout<ForeignMetadataInitialization>.size;
+        }
+        if (data.pointee.getFlags().hasSingletonMetadataInitialization) {
+            offset += MemoryLayout<SingletonMetadataInitialization>.size;
         }
         return offset;
     }
     static func getVTable(_ data: UnsafePointer<ClassDescriptor>) -> UnsafeBufferPointer<MethodDescriptor>? {
         if (data.pointee.getFlags().hasVTable) {
-            let ptr = UnsafeRawPointer(OpaquePointer(data.advanced(by:1))).advanced(by:data.pointee._getVtableOffset()).assumingMemoryBound(to:VTableDescriptorHeader.self);
+            let ptr = UnsafeRawPointer(OpaquePointer(data.advanced(by:1))).advanced(by:self._getVtableOffset(data)).assumingMemoryBound(to:VTableDescriptorHeader.self);
             let buffer = UnsafeBufferPointer(start:UnsafePointer<MethodDescriptor>(OpaquePointer(ptr.advanced(by:1))), count:Int(ptr.pointee.vTableSize));
             return Optional(buffer);
         } else {
@@ -133,20 +142,25 @@ extension ClassDescriptor : TypeContextClassDescriptorKind {
     }
     
     fileprivate static func _getOverridetableOffset(_ data: UnsafePointer<ClassDescriptor>) -> Int {
-        var offset = Int(MemoryLayout.size(ofValue:TypeGenericContextDescriptorHeader.self));
+        let ptr = UnsafePointer<TypeGenericContextDescriptorHeader>(OpaquePointer(data.advanced(by:1)));
+        var pad = Int(ptr.pointee.base.numParams % 4);
+        if (pad > 0) {
+            pad = 4 - pad;
+        }
+        var offset = MemoryLayout<TypeGenericContextDescriptorHeader>.size + Int(ptr.pointee.base.numParams) + pad + 3 * 4 * Int(ptr.pointee.base.numRequirements) + 4;
         if (data.pointee.getFlags().hasResilientSuperclass) {
-            offset += Int(MemoryLayout.size(ofValue:ResilientSuperclass.self));
+            offset += MemoryLayout<ResilientSuperclass>.size;
         }
         if (data.pointee.getFlags().hasForeignMetadataInitialization) {
-            offset += Int(MemoryLayout.size(ofValue:ForeignMetadataInitialization.self));
+            offset += MemoryLayout<ForeignMetadataInitialization>.size;
         }
         if (data.pointee.getFlags().hasSingletonMetadataInitialization) {
-            offset += Int(MemoryLayout.size(ofValue:SingletonMetadataInitialization.self));
+            offset += MemoryLayout<SingletonMetadataInitialization>.size;
         }
         if (data.pointee.getFlags().hasVTable) {
             let ptr = UnsafeRawPointer(OpaquePointer(data.advanced(by:1))).advanced(by:offset).assumingMemoryBound(to:VTableDescriptorHeader.self);
-            offset += Int(MemoryLayout.size(ofValue:VTableDescriptorHeader.self));
-            offset += MemoryLayout.size(ofValue:MethodDescriptor.self) * Int(ptr.pointee.vTableSize);
+            offset += MemoryLayout<VTableDescriptorHeader>.size;
+            offset += MemoryLayout<MethodDescriptor>.size * Int(ptr.pointee.vTableSize);
         }
         return offset;
     }

@@ -38,40 +38,6 @@ struct ContextDescriptorFlags {
     let value: UInt32;
 }
 
-//enum SwiftMethodKind : Int {
-//    case Method = 0;
-//    case Init = 1;
-//    case Getter = 2;
-//    case Setter = 3;
-//    case ModifyCoroutine = 4;
-//    case ReadCoroutine = 5;
-//};
-//
-//enum SwiftMethodType : UInt32 {
-//    case KindMask = 0x0F;                // 16 kinds should be enough for anybody
-//    case IsInstanceMask = 0x10;
-//    case IsDynamicMask = 0x20;
-//    case IsAsyncMask = 0x40;
-////    case ExtraDiscriminatorShift = 16;
-//    case ExtraDiscriminatorMask = 0xFFFF0000;
-//};
-//
-//struct SwiftType {
-//    var Flag: UInt32;
-//    var Parent: UInt32;
-//};
-//
-//struct SwiftMethod {
-//    var Flag: UInt32;
-//    var Offset: UInt32;
-//};
-//
-//struct SwiftOverrideMethod {
-//    var OverrideClass: UInt32;
-//    var OverrideMethod: UInt32;
-//    var Method: UInt32;
-//};
-
 struct TypeContextClassDescriptor {
     let flag: UInt32;
     let parent: RelativeDirectPointer;
@@ -146,7 +112,6 @@ struct MethodDescriptor {
 }
 
 struct OverrideTableHeader {
-    let offset: UInt32;
     let numEntries: UInt32;
 };
 
