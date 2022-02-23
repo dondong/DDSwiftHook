@@ -34,6 +34,12 @@ enum ContextDescriptorKind : UInt8 {
     case Type_Last = 31;
 };
 
+enum MetadataInitializationKind : UInt8 {
+    case NoMetadataInitialization = 0;
+    case SingletonMetadataInitialization = 1;
+    case ForeignMetadataInitialization = 2;
+}
+
 struct ContextDescriptorFlags {
     let value: UInt32;
 }
@@ -73,7 +79,7 @@ struct ClassDescriptor {
     // CanonicalSpecializedMetadatasCachingOnceToken
 };
 
-struct TargetGenericContextDescriptorHeader {
+struct GenericContextDescriptorHeader {
     let numParams: UInt16;
     let numRequirements: UInt16;
     let numKeyArguments: UInt16;
@@ -83,8 +89,14 @@ struct TargetGenericContextDescriptorHeader {
 struct TypeGenericContextDescriptorHeader {
     let instantiationCache: RelativeDirectPointer;
     let defaultInstantiationPattern: RelativeDirectPointer;
-    let base: TargetGenericContextDescriptorHeader;
+    let base: GenericContextDescriptorHeader;
 };
+
+struct GenericRequirementDescriptor {
+    let flags: UInt32;
+    let param: RelativeDirectPointer;
+    let layout: RelativeDirectPointer;
+}
 
 struct ResilientSuperclass {
     let superclass: RelativeDirectPointer;
