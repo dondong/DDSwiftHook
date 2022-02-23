@@ -51,14 +51,26 @@ extension ContextDescriptorFlags {
     var kindSpecificFlags: UInt16 { get { return UInt16((self.value >> 16) & 0xFFFF); } }
     var hasResilientSuperclass: Bool { get { return (self.kindSpecificFlags & 0x2000) != 0; } }
     var hasForeignMetadataInitialization: Bool { get { return (self.kindSpecificFlags & 0x4) != 0; } }
+    var hasSingletonMetadataInitialization: Bool { get { return (self.kindSpecificFlags & 0x2) != 0; } }
     var hasVTable: Bool { get { return (self.kindSpecificFlags & 0x8000) != 0; } }
     var hasOverrideTable: Bool { get { return (self.kindSpecificFlags & 0x4000) != 0; } }
-    var hasSingletonMetadataInitialization: Bool { get { return (self.kindSpecificFlags & 0x2) != 0; } }
 }
 
 extension MethodDescriptor {
     static func getImpl(_ data: UnsafePointer<MethodDescriptor>) -> OpaquePointer {
         return DDSwiftRuntime.getPointerFromRelativeDirectPointer(UnsafePointer<RelativeDirectPointer>(OpaquePointer(data)).advanced(by:1))!;
+    }
+}
+
+extension MethodOverrideDescriptor {
+    static func getClass(_ data: UnsafePointer<MethodOverrideDescriptor>) -> OpaquePointer {
+        return DDSwiftRuntime.getPointerFromRelativeDirectPointer(UnsafePointer<RelativeDirectPointer>(OpaquePointer(data)))!;
+    }
+    static func getMethod(_ data: UnsafePointer<MethodOverrideDescriptor>) -> OpaquePointer {
+        return DDSwiftRuntime.getPointerFromRelativeDirectPointer(UnsafePointer<RelativeDirectPointer>(OpaquePointer(data)).advanced(by:1))!;
+    }
+    static func getImpl(_ data: UnsafePointer<MethodOverrideDescriptor>) -> OpaquePointer {
+        return DDSwiftRuntime.getPointerFromRelativeDirectPointer(UnsafePointer<RelativeDirectPointer>(OpaquePointer(data)).advanced(by:2))!;
     }
 }
 
@@ -97,7 +109,7 @@ extension TypeContextClassDescriptorKind {
 extension TypeContextClassDescriptor : TypeContextClassDescriptorKind {
 }
 extension ClassDescriptor : TypeContextClassDescriptorKind {
-    fileprivate func getVtableOffset() -> Int {
+    fileprivate func _getVtableOffset() -> Int {
         var offset = Int(MemoryLayout.size(ofValue:TypeGenericContextDescriptorHeader.self));
         if (self.getFlags().hasResilientSuperclass) {
             offset += Int(MemoryLayout.size(ofValue:ResilientSuperclass.self));
@@ -112,8 +124,37 @@ extension ClassDescriptor : TypeContextClassDescriptorKind {
     }
     static func getVTable(_ data: UnsafePointer<ClassDescriptor>) -> UnsafeBufferPointer<MethodDescriptor>? {
         if (data.pointee.getFlags().hasVTable) {
-            let ptr = UnsafeRawPointer(OpaquePointer(data.advanced(by:1))).advanced(by:data.pointee.getVtableOffset()).assumingMemoryBound(to:VTableDescriptorHeader.self);
+            let ptr = UnsafeRawPointer(OpaquePointer(data.advanced(by:1))).advanced(by:data.pointee._getVtableOffset()).assumingMemoryBound(to:VTableDescriptorHeader.self);
             let buffer = UnsafeBufferPointer(start:UnsafePointer<MethodDescriptor>(OpaquePointer(ptr.advanced(by:1))), count:Int(ptr.pointee.vTableSize));
+            return Optional(buffer);
+        } else {
+            return nil;
+        }
+    }
+    
+    fileprivate static func _getOverridetableOffset(_ data: UnsafePointer<ClassDescriptor>) -> Int {
+        var offset = Int(MemoryLayout.size(ofValue:TypeGenericContextDescriptorHeader.self));
+        if (data.pointee.getFlags().hasResilientSuperclass) {
+            offset += Int(MemoryLayout.size(ofValue:ResilientSuperclass.self));
+        }
+        if (data.pointee.getFlags().hasForeignMetadataInitialization) {
+            offset += Int(MemoryLayout.size(ofValue:ForeignMetadataInitialization.self));
+        }
+        if (data.pointee.getFlags().hasSingletonMetadataInitialization) {
+            offset += Int(MemoryLayout.size(ofValue:SingletonMetadataInitialization.self));
+        }
+        if (data.pointee.getFlags().hasVTable) {
+            let ptr = UnsafeRawPointer(OpaquePointer(data.advanced(by:1))).advanced(by:offset).assumingMemoryBound(to:VTableDescriptorHeader.self);
+            offset += Int(MemoryLayout.size(ofValue:VTableDescriptorHeader.self));
+            offset += MemoryLayout.size(ofValue:MethodDescriptor.self) * Int(ptr.pointee.vTableSize);
+        }
+        return offset;
+    }
+    
+    static func getOverridetable(_ data: UnsafePointer<ClassDescriptor>) -> UnsafeBufferPointer<MethodOverrideDescriptor>? {
+        if (data.pointee.getFlags().hasOverrideTable) {
+            let ptr = UnsafeRawPointer(OpaquePointer(data.advanced(by:1))).advanced(by:self._getOverridetableOffset(data)).assumingMemoryBound(to:OverrideTableHeader.self);
+            let buffer = UnsafeBufferPointer(start:UnsafePointer<MethodOverrideDescriptor>(OpaquePointer(ptr.advanced(by:1))), count:Int(ptr.pointee.numEntries));
             return Optional(buffer);
         } else {
             return nil;

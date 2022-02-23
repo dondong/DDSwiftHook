@@ -146,6 +146,7 @@ struct MethodDescriptor {
 }
 
 struct OverrideTableHeader {
+    let offset: UInt32;
     let numEntries: UInt32;
 };
 

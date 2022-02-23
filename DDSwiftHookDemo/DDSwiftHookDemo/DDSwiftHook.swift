@@ -8,8 +8,14 @@
 import Foundation
 import MachO
 
-class Test {
+class Base {
     func test() {
+        print("base");
+    }
+}
+
+class Test: Base {
+     override func test() {
         print("test");
     }
     
@@ -22,11 +28,20 @@ class DDSwiftHook {
     public static func test() {
         let data = DDSwiftRuntime.getSwiftClass(Test.self);
         let des = data?.pointee.getDescriptor();
+        print("vtable");
         let tt = ClassDescriptor.getVTable(des!);
         for i in 0..<Int(tt?.count ?? 0) {
             let p = UnsafePointer<MethodDescriptor>(tt!.baseAddress!).advanced(by:i);
             print("\(i) ", String(format:"%x", tt![i].flags), MethodDescriptor.getImpl(p));
         }
+        print("overridetable");
+        let ott = ClassDescriptor.getOverridetable(des!);
+        for i in 0..<Int(ott?.count ?? 0) {
+            let p = UnsafePointer<MethodOverrideDescriptor>(ott!.baseAddress!).advanced(by:i);
+            print("\(i) ", MethodOverrideDescriptor.getClass(p), MethodOverrideDescriptor.getMethod(p), MethodOverrideDescriptor.getImpl(p));
+        }
+        
+        print("function");
         let fun1 = Test.test;
         let fun2 = Test.testArg;
         let ptr: OpaquePointer = DDSwiftRuntime.covert(Test.test);
