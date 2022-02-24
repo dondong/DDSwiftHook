@@ -42,20 +42,19 @@ class DDSwiftHook {
             print("\(i) ", ott![i].cls, ott![i].method, ott![i].impl);
             print("\(i) ", MethodOverrideDescriptor.getClass(p), MethodOverrideDescriptor.getMethod(p), MethodOverrideDescriptor.getImpl(p));
             let ptr = MethodOverrideDescriptor.getClass(p);
-            let c: UnsafePointer<ClassMetadata> = DDSwiftRuntime.getData(ptr)!;
-            print(ClassMetadata.getName(c));
+            print(ClassDescriptor.getName(UnsafePointer<ClassDescriptor>(ptr)));
         }
         
-//        print("function");
-//        let fun1 = Test.test;
-//        let fun2 = Test.testArg;
-//        let ptr: OpaquePointer = DDSwiftRuntime.covert(Test.test);
-//        print(ptr);
-//        print("----------------");
-//        let table = ClassMetadata.getFunctionTable(data!);
-//        for i in 0..<table.count {
-//            print(table[i]);
-//        }
+        print("function");
+        let fun1 = Test.test;
+        let fun2 = Test.testArg;
+        let ptr: OpaquePointer = DDSwiftRuntime.covert(Test.test);
+        print(ptr);
+        print("----------------");
+        let table = ClassMetadata.getFunctionTable(data!);
+        for i in 0..<table.count {
+            print(table[i]);
+        }
         
     }
 }

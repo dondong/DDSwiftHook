@@ -38,7 +38,19 @@ class DDSwiftRuntime {
         return UnsafeRawPointer.init(tmpValPtr).load(as:T.self);
     }
     
-    static func getPointerFromRelativeDirectPointer(_ ptr: UnsafePointer<RelativeDirectPointer>) -> OpaquePointer? {
+    static func getPointerFromRelativeContextPointer(_ ptr: UnsafePointer<RelativeContextPointer>) -> OpaquePointer? {
+        if (0 != ptr.pointee) {
+            if ((ptr.pointee & 1) != 0) {
+                return UnsafePointer<OpaquePointer>(OpaquePointer(bitPattern:Int(bitPattern:ptr) + Int(ptr.pointee & ~1)))?.pointee;
+            } else {
+                return OpaquePointer(bitPattern:Int(bitPattern:ptr) + Int(ptr.pointee & ~1));
+            }
+        } else {
+            return nil;
+        }
+    }
+    
+    static func getPointerFromRelativeDirectPointer(_ ptr: UnsafePointer<RelativeDirectPointer>, _ isPointer: Bool = false) -> OpaquePointer? {
         if (0 != ptr.pointee) {
             return OpaquePointer(bitPattern:Int(bitPattern:ptr) + Int(ptr.pointee));
         } else {
@@ -67,10 +79,10 @@ extension MethodDescriptor {
 
 extension MethodOverrideDescriptor {
     static func getClass(_ data: UnsafePointer<MethodOverrideDescriptor>) -> OpaquePointer {
-        return DDSwiftRuntime.getPointerFromRelativeDirectPointer(UnsafePointer<RelativeDirectPointer>(OpaquePointer(data)))!;
+        return DDSwiftRuntime.getPointerFromRelativeContextPointer(UnsafePointer<RelativeDirectPointer>(OpaquePointer(data)))!;
     }
     static func getMethod(_ data: UnsafePointer<MethodOverrideDescriptor>) -> OpaquePointer {
-        return DDSwiftRuntime.getPointerFromRelativeDirectPointer(UnsafePointer<RelativeDirectPointer>(OpaquePointer(data)).advanced(by:1))!;
+        return DDSwiftRuntime.getPointerFromRelativeContextPointer(UnsafePointer<RelativeDirectPointer>(OpaquePointer(data)).advanced(by:1))!;
     }
     static func getImpl(_ data: UnsafePointer<MethodOverrideDescriptor>) -> OpaquePointer {
         return DDSwiftRuntime.getPointerFromRelativeDirectPointer(UnsafePointer<RelativeDirectPointer>(OpaquePointer(data)).advanced(by:2))!;

@@ -7,6 +7,7 @@
 
 import Foundation
 
+typealias RelativeContextPointer=Int32
 typealias RelativeDirectPointer=Int32
 typealias Pointer=uintptr_t
 
@@ -128,8 +129,8 @@ struct OverrideTableHeader {
 };
 
 struct MethodOverrideDescriptor {
-    let cls: RelativeDirectPointer;
-    let method: RelativeDirectPointer;  // base
+    let cls: RelativeContextPointer;
+    let method: RelativeContextPointer;  // base
     let impl: RelativeDirectPointer;    // override
 }
 
