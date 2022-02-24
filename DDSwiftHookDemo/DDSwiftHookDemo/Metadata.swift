@@ -11,6 +11,8 @@ typealias RelativeContextPointer=Int32
 typealias RelativeDirectPointer=Int32
 typealias Pointer=uintptr_t
 
+
+
 enum ContextDescriptorKind : UInt8 {
     /// This context descriptor represents a module.
     case Module = 0;
@@ -41,12 +43,21 @@ enum MetadataInitializationKind : UInt8 {
     case ForeignMetadataInitialization = 2;
 }
 
+enum MethodDescriptorKind : UInt8 {
+    case Method = 0;
+    case Init = 1;
+    case Getter = 2;
+    case Setter = 3;
+    case ModifyCoroutine = 4;
+    case ReadCoroutine = 5;
+}
+
 struct ContextDescriptorFlags {
     let value: UInt32;
 }
 
 struct TypeContextClassDescriptor {
-    let flag: UInt32;
+    let flag: ContextDescriptorFlags;
     let parent: RelativeDirectPointer;
     let name: RelativeDirectPointer;
     let accessFunction: Int32;
@@ -54,7 +65,7 @@ struct TypeContextClassDescriptor {
 };
 
 struct ClassDescriptor {
-    let flag: UInt32;
+    let flag: ContextDescriptorFlags;
     let parent: RelativeDirectPointer;
     let name: RelativeDirectPointer;
     let accessFunction: RelativeDirectPointer;
@@ -119,8 +130,12 @@ struct VTableDescriptorHeader {
     let vTableSize: UInt32;
 };
 
+struct MethodDescriptorFlags {
+    let value: UInt32;
+}
+
 struct MethodDescriptor {
-    let flags: UInt32;
+    let flags: MethodDescriptorFlags;
     let impl: RelativeDirectPointer;
 }
 
@@ -177,4 +192,5 @@ struct ClassMetadata {
     let classAddressPoint: UInt32;
     let description: Pointer;
     let ivarDestroyer: Pointer;
+    // functin list
 };
