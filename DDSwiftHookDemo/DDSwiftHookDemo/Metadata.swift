@@ -11,6 +11,37 @@ typealias RelativeContextPointer=Int32
 typealias RelativeDirectPointer=Int32
 typealias Pointer=uintptr_t
 
+let MetadataKindIsNonType: UInt32 = 0x400;
+let MetadataKindIsNonHeap: UInt32 = 0x200;
+let MetadataKindIsRuntimePrivate: UInt32 = 0x100;
+enum MetadataKind : UInt32 {
+    case Class = 0;
+    case Struct = 0x200;  //  0 | MetadataKindIsNonHeap
+    case Enum = 0x201;  // 1 | MetadataKindIsNonHeap
+    case Optional = 0x202;  // 2 | MetadataKindIsNonHeap)
+    case ForeignClass = 0x203;  // 3 | MetadataKindIsNonHeap)
+    case Opaque = 0x300;   // 0 | MetadataKindIsRuntimePrivate | MetadataKindIsNonHeap
+    case Tuple = 0x301;  // 1 | MetadataKindIsRuntimePrivate | MetadataKindIsNonHeap
+    case Function = 0x302;  // 2 | MetadataKindIsRuntimePrivate | MetadataKindIsNonHeap
+    case Existential = 0x303;  // 3 | MetadataKindIsRuntimePrivate | MetadataKindIsNonHeap
+    case Metatype = 0x304;   // 4 | MetadataKindIsRuntimePrivate | MetadataKindIsNonHeap
+    case ObjCClassWrapper = 0x305;  // 5 | MetadataKindIsRuntimePrivate | MetadataKindIsNonHeap
+    case ExistentialMetatype = 0x306;  // 6 | MetadataKindIsRuntimePrivate | MetadataKindIsNonHeap
+    case HeapLocalVariable = 0x400;   // 0 | MetadataKindIsNonType
+    case HeapGenericLocalVariable = 0x500;  // 0 | MetadataKindIsNonType | MetadataKindIsRuntimePrivate
+    case ErrorObject = 0x501;  // 1 | MetadataKindIsNonType | MetadataKindIsRuntimePrivate
+    case Task = 0x502;  // 2 | MetadataKindIsNonType | MetadataKindIsRuntimePrivate
+    case Job = 0x503;  // 3 | MetadataKindIsNonType | MetadataKindIsRuntimePrivate
+}
+
+struct HeapMetadata {
+    let kind: Pointer;
+}
+
+struct HeapObject {
+    let metadata: UnsafePointer<HeapMetadata>;
+}
+
 enum ContextDescriptorKind : UInt8 {
     /// This context descriptor represents a module.
     case Module = 0;
