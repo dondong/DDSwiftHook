@@ -50,7 +50,49 @@ class DDSwiftRuntime {
         }
     }
 }
+extension MetadataKind {
+    var isHeapMetadataKind: Bool { get { return (self.rawValue & MetadataKindIsNonHeap) == 0; } }
+    var isTypeMetadataKind: Bool { get { return (self.rawValue & MetadataKindIsNonType) == 0; } }
+    var isRuntimePrivateMetadataKind: Bool { get { return (self.rawValue & MetadataKindIsRuntimePrivate) != 0; } }
+}
 
+extension HeapMetadata {
+    static let LastEnumerated: UInt = 0x7FF;
+    var enumeratedMetadataKind: MetadataKind {
+        get {
+            if (self.kind > HeapMetadata.LastEnumerated) {
+                return .Class;
+            }
+            return MetadataKind(rawValue:UInt32(self.kind & HeapMetadata.LastEnumerated)) ?? .Class;
+        }
+    }
+    var isClassObject: Bool {
+        get {
+            return self.enumeratedMetadataKind == .Class;
+        }
+    }
+    var isAnyExistentialType: Bool {
+        get {
+            switch (self.enumeratedMetadataKind) {
+            case .ExistentialMetatype, .Existential:
+                return true;
+            default:
+                return false;
+            }
+        }
+    }
+    var isAnyClass: Bool {
+        get {
+            switch (self.enumeratedMetadataKind) {
+            case .Class, .ObjCClassWrapper, .ForeignClass:
+                return true;
+            default:
+                return false;
+            }
+        }
+    }
+}
+>>>>>>> e39f9270a1a022daade5f6be44344af7e1af64b7
 
 extension ContextDescriptorFlags {
     var kind: ContextDescriptorKind { get { return ContextDescriptorKind(rawValue:UInt8(self.value & 0x1F)) ?? .Module; } }
