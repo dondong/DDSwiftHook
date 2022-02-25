@@ -37,11 +37,11 @@ class DDSwiftHook {
     }
     
     public static func test() {
-        let t = TestObject.init();
-        let o = unsafeBitCast(t, to:UnsafePointer<HeapObject>.self);
-        let v = UnsafeMutablePointer<HeapMetadata>(OpaquePointer(o.pointee.metadata)).pointee.valueWitnesses;
-        print(v);
-        print(HeapMetadata.getValueWitnesses(o.pointee.metadata));
+//        let t = TestObject.init();
+//        let o = unsafeBitCast(t, to:UnsafePointer<HeapObject>.self);
+//        let v = UnsafeMutablePointer<HeapMetadata>(OpaquePointer(o.pointee.metadata)).pointee.valueWitnesses;
+//        print(v);
+//        print(HeapMetadata.getValueWitnesses(o.pointee.metadata));
 //        print("isBitwiseTakable: ", v.pointee.flags.isBitwiseTakable);
 //        print("isPOD: ", v.pointee.flags.isPOD);
 //        print("isIncomplete: ", v.pointee.flags.isIncomplete);

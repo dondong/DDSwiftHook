@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A347915627C91FA00076C9B1 /* TypeDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A347915527C91FA00076C9B1 /* TypeDescriptor.swift */; };
 		A35D3B4D27C32C3600331E54 /* Metadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = A35D3B4C27C32C3600331E54 /* Metadata.swift */; };
 		A371540F27C2026D00EE64F5 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A371540E27C2026D00EE64F5 /* AppDelegate.swift */; };
 		A371541127C2026D00EE64F5 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A371541027C2026D00EE64F5 /* SceneDelegate.swift */; };
@@ -19,6 +20,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		A347915527C91FA00076C9B1 /* TypeDescriptor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TypeDescriptor.swift; sourceTree = "<group>"; };
 		A35D3B4C27C32C3600331E54 /* Metadata.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Metadata.swift; sourceTree = "<group>"; };
 		A371540B27C2026D00EE64F5 /* DDSwiftHookDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DDSwiftHookDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A371540E27C2026D00EE64F5 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -68,6 +70,7 @@
 				A37154C027C2978100EE64F5 /* DDSwiftHook.swift */,
 				A3EE9C0027C4B9CD0069D19E /* DDSwiftRuntime.swift */,
 				A35D3B4C27C32C3600331E54 /* Metadata.swift */,
+				A347915527C91FA00076C9B1 /* TypeDescriptor.swift */,
 				A371541427C2026D00EE64F5 /* Main.storyboard */,
 				A371541727C2026E00EE64F5 /* Assets.xcassets */,
 				A371541927C2026E00EE64F5 /* LaunchScreen.storyboard */,
@@ -148,6 +151,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A371541327C2026D00EE64F5 /* ViewController.swift in Sources */,
+				A347915627C91FA00076C9B1 /* TypeDescriptor.swift in Sources */,
 				A371540F27C2026D00EE64F5 /* AppDelegate.swift in Sources */,
 				A37154C127C2978100EE64F5 /* DDSwiftHook.swift in Sources */,
 				A371541127C2026D00EE64F5 /* SceneDelegate.swift in Sources */,

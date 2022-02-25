@@ -9,6 +9,24 @@ import Foundation
 import MachO
 
 class DDSwiftRuntime {
+    static func getAllSwiftTypeList() -> [UnsafePointer<TypeContextDescriptor>] {
+        var list = [UnsafePointer<TypeContextDescriptor>]();
+        for i in 0..<_dyld_image_count() {
+            let header = unsafeBitCast(_dyld_get_image_header(i), to:UnsafePointer<mach_header_64>.self);
+            var size: UInt = 0;
+            guard let sect = getsectiondata(header, "__TEXT", "__swift5_types", &size) else { continue; }
+            let ptr = UnsafePointer<RelativeDirectPointer>(OpaquePointer(sect));
+            size = size / UInt(MemoryLayout<RelativeDirectPointer>.size);
+            for j in 0..<size {
+                guard let p = Self.getPointerFromRelativeDirectPointer(ptr.advanced(by:Int(j))) else { continue; }
+                let type = UnsafeMutablePointer<TypeContextDescriptor>(p);
+                list.append(type);
+            }
+            break;
+        }
+        return list;
+    }
+    
     static func getObjcClass(_ cls: AnyClass) -> UnsafePointer<AnyClassMetadata> {
         let ptr = Unmanaged.passUnretained(cls as AnyObject).toOpaque();
         return UnsafePointer<AnyClassMetadata>.init(OpaquePointer(ptr));
@@ -42,7 +60,7 @@ class DDSwiftRuntime {
         }
     }
     
-    static func getPointerFromRelativeDirectPointer(_ ptr: UnsafePointer<RelativeDirectPointer>, _ isPointer: Bool = false) -> OpaquePointer? {
+    static func getPointerFromRelativeDirectPointer(_ ptr: UnsafePointer<RelativeDirectPointer>) -> OpaquePointer? {
         if (0 != ptr.pointee) {
             return OpaquePointer(bitPattern:Int(bitPattern:ptr) + Int(ptr.pointee));
         } else {
