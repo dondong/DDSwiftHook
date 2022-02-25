@@ -10,7 +10,8 @@ import Foundation
 typealias RelativeContextPointer=Int32
 typealias RelativeDirectPointer=Int32
 typealias Pointer=uintptr_t
-
+// MARK: -
+// MARK: HeapObject
 /***
  * MetadataKind
  ***/
@@ -103,7 +104,7 @@ extension ValueWitnessTable {
  ***/
 struct HeapMetadata {
     let kind: Pointer;
-    let valueWitnesses: UnsafePointer<ValueWitnessTable>;
+    private let _valueWitnesses: UnsafePointer<ValueWitnessTable>;
 }
 
 extension HeapMetadata {
@@ -138,14 +139,10 @@ extension HeapMetadata {
         }
     }
     
-    var witnessTable: UnsafePointer<ValueWitnessTable> {
-        mutating get {
-            return HeapMetadata.getWitnessTable(&self);
-        }
-    }
-    
-    static func getWitnessTable(_ data: UnsafePointer<HeapMetadata>) -> UnsafePointer<ValueWitnessTable> {
-        return data.advanced(by:-1).pointee.valueWitnesses;
+    // valueWitnesses
+    var valueWitnesses: UnsafePointer<ValueWitnessTable> { mutating get { return Self.getValueWitnesses(&self); } }
+    static func getValueWitnesses(_ data: UnsafePointer<HeapMetadata>) -> UnsafePointer<ValueWitnessTable> {
+        return data.advanced(by:-1).pointee._valueWitnesses;
     }
 }
 
@@ -157,6 +154,8 @@ struct HeapObject {
     let refCounts: size_t;
 }
 
+// MARK: -
+// MARK: ClassMetadata
 /***
  * ContextDescriptorKind
  ***/
@@ -227,23 +226,57 @@ extension ContextDescriptorFlags {
 /***
  * TypeContextClassDescriptor
  ***/
+protocol TypeContextClassDescriptorKind {
+}
+
+extension TypeContextClassDescriptorKind {
+    // parent
+    var parent: UnsafePointer<TypeContextClassDescriptor>? { mutating get { return Self.getParent(&self); } }
+    static func getParent<T : TypeContextClassDescriptorKind>(_ data: UnsafePointer<T>) -> UnsafePointer<TypeContextClassDescriptor>? {
+        let ptr = DDSwiftRuntime.getPointerFromRelativeDirectPointer(UnsafePointer<RelativeDirectPointer>(OpaquePointer(data)).advanced(by:1));
+        return UnsafePointer<TypeContextClassDescriptor>(ptr);
+    }
+    // name
+    var name: String { mutating get { return Self.getName(&self); } }
+    static func getName<T : TypeContextClassDescriptorKind>(_ data: UnsafePointer<T>) -> String {
+        let ptr = DDSwiftRuntime.getPointerFromRelativeDirectPointer(UnsafePointer<RelativeDirectPointer>(OpaquePointer(data)).advanced(by:2))!;
+        let namePtr = UnsafePointer<CChar>(ptr);
+        guard let parent = self.getParent(data) else { return String(cString:namePtr) }
+        let preName = self.getName(parent);
+        return String(preName + "." + String(cString:namePtr));
+    }
+    // accessFunction
+    var accessFunction: OpaquePointer? { mutating get { Self.getAccessFunction(&self); } }
+    static func getAccessFunction<T : TypeContextClassDescriptorKind>(_ data: UnsafePointer<T>) -> OpaquePointer? {
+        return DDSwiftRuntime.getPointerFromRelativeDirectPointer(UnsafePointer<RelativeDirectPointer>(OpaquePointer(data)).advanced(by:3));
+    }
+    // fieldDescriptor
+    var fieldDescriptor: OpaquePointer? { mutating get { return Self.getFieldDescriptor(&self); } }
+    static func getFieldDescriptor<T : TypeContextClassDescriptorKind>(_ data: UnsafePointer<T>) -> OpaquePointer? {
+        return DDSwiftRuntime.getPointerFromRelativeDirectPointer(UnsafePointer<RelativeDirectPointer>(OpaquePointer(data)).advanced(by:4));
+    }
+}
+
 struct TypeContextClassDescriptor {
     let flag: ContextDescriptorFlags;
-    let parent: RelativeDirectPointer;
-    let name: RelativeDirectPointer;
-    let accessFunction: Int32;
-    let fieldDescriptor: Int32;
+    fileprivate let _parent: RelativeDirectPointer;
+    fileprivate let _name: RelativeDirectPointer;
+    fileprivate let _accessFunction: RelativeDirectPointer;
+    fileprivate let _fieldDescriptor: RelativeDirectPointer;
 };
+
+extension TypeContextClassDescriptor : TypeContextClassDescriptorKind {
+}
 
 /***
  * ClassDescriptor
  ***/
 struct ClassDescriptor {
     let flag: ContextDescriptorFlags;
-    let parent: RelativeDirectPointer;
-    let name: RelativeDirectPointer;
-    let accessFunction: RelativeDirectPointer;
-    let fieldDescriptor: RelativeDirectPointer;
+    fileprivate let _parent: RelativeDirectPointer;
+    fileprivate let _name: RelativeDirectPointer;
+    fileprivate let _accessFunction: RelativeDirectPointer;
+    fileprivate let _fieldDescriptor: RelativeDirectPointer;
     let superclassType: RelativeDirectPointer;
     let metadataNegativeSizeInWords: UInt32;  // resilientMetadataBounds: RelativeDirectPointer
     let metadataPositiveSizeInWords: UInt32;  // extraClassFlags: UInt32
@@ -264,6 +297,60 @@ struct ClassDescriptor {
     // CanonicalSpecializedMetadataAccessorsListEntry
     // CanonicalSpecializedMetadatasCachingOnceToken
 };
+
+extension ClassDescriptor : TypeContextClassDescriptorKind {
+    fileprivate static func _getVtableOffset(_ data: UnsafePointer<ClassDescriptor>) -> Int {
+        var offset = 0;
+        if (data.pointee.flag.isGeneric) {
+            let ptr = UnsafePointer<TypeGenericContextDescriptorHeader>(OpaquePointer(data.advanced(by:1)));
+            offset = MemoryLayout<TypeGenericContextDescriptorHeader>.size + Int((ptr.pointee.base.numParams + 3) & ~UInt16(3)) + MemoryLayout<GenericRequirementDescriptor>.size * Int(ptr.pointee.base.numRequirements);
+        }
+        if (data.pointee.flag.hasResilientSuperclass) {
+            offset += MemoryLayout<ResilientSuperclass>.size;
+        }
+        switch(data.pointee.flag.metadataInitialization) {
+        case .ForeignMetadataInitialization:
+            offset += MemoryLayout<ForeignMetadataInitialization>.size;
+        case .SingletonMetadataInitialization:
+            offset += MemoryLayout<SingletonMetadataInitialization>.size;
+        case .NoMetadataInitialization:
+            offset += 0;
+        }
+        return offset;
+    }
+    // vtable
+    var vtable: UnsafeBufferPointer<MethodDescriptor>? { mutating get { Self.getVTable(&self); } }
+    static func getVTable(_ data: UnsafePointer<ClassDescriptor>) -> UnsafeBufferPointer<MethodDescriptor>? {
+        if (data.pointee.flag.hasVTable) {
+            let ptr = UnsafeRawPointer(OpaquePointer(data.advanced(by:1))).advanced(by:self._getVtableOffset(data)).assumingMemoryBound(to:VTableDescriptorHeader.self);
+            let buffer = UnsafeBufferPointer(start:UnsafePointer<MethodDescriptor>(OpaquePointer(ptr.advanced(by:1))), count:Int(ptr.pointee.vTableSize));
+            return Optional(buffer);
+        } else {
+            return nil;
+        }
+    }
+    
+    fileprivate static func _getOverridetableOffset(_ data: UnsafePointer<ClassDescriptor>) -> Int {
+        var offset = self._getVtableOffset(data);
+        if (data.pointee.flag.hasVTable) {
+            let ptr = UnsafeRawPointer(OpaquePointer(data.advanced(by:1))).advanced(by:offset).assumingMemoryBound(to:VTableDescriptorHeader.self);
+            offset += MemoryLayout<VTableDescriptorHeader>.size;
+            offset += MemoryLayout<MethodDescriptor>.size * Int(ptr.pointee.vTableSize);
+        }
+        return offset;
+    }
+    // overridetable
+    var overridetable: UnsafeBufferPointer<MethodOverrideDescriptor>? { mutating get { return Self.getOverridetable(&self); } }
+    static func getOverridetable(_ data: UnsafePointer<ClassDescriptor>) -> UnsafeBufferPointer<MethodOverrideDescriptor>? {
+        if (data.pointee.flag.hasOverrideTable) {
+            let ptr = UnsafeRawPointer(OpaquePointer(data.advanced(by:1))).advanced(by:self._getOverridetableOffset(data)).assumingMemoryBound(to:OverrideTableHeader.self);
+            let buffer = UnsafeBufferPointer(start:UnsafePointer<MethodOverrideDescriptor>(OpaquePointer(ptr.advanced(by:1))), count:Int(ptr.pointee.numEntries));
+            return Optional(buffer);
+        } else {
+            return nil;
+        }
+    }
+}
 
 /***
  * GenericContextDescriptorHeader
@@ -344,10 +431,12 @@ extension MethodDescriptorFlags {
  ***/
 struct MethodDescriptor {
     let flags: MethodDescriptorFlags;
-    let impl: RelativeDirectPointer;
+    fileprivate let _impl: RelativeDirectPointer;
 }
 
 extension MethodDescriptor {
+    // impl
+    var impl: OpaquePointer { mutating get { MethodDescriptor.getImpl(&self); } }
     static func getImpl(_ data: UnsafePointer<MethodDescriptor>) -> OpaquePointer {
         return DDSwiftRuntime.getPointerFromRelativeDirectPointer(UnsafePointer<RelativeDirectPointer>(OpaquePointer(data)).advanced(by:1))!;
     }
@@ -364,18 +453,24 @@ struct OverrideTableHeader {
  * MethodOverrideDescriptor
  ***/
 struct MethodOverrideDescriptor {
-    let cls: RelativeContextPointer;
-    let method: RelativeContextPointer;  // base
-    let impl: RelativeDirectPointer;    // override
+    fileprivate let _cls: RelativeContextPointer;
+    fileprivate let _method: RelativeContextPointer;  // base
+    fileprivate let _impl: RelativeDirectPointer;    // override
 }
 
 extension MethodOverrideDescriptor {
+    // cls
+    var cls: OpaquePointer { mutating get { Self.getClass(&self); } }
     static func getClass(_ data: UnsafePointer<MethodOverrideDescriptor>) -> OpaquePointer {
         return DDSwiftRuntime.getPointerFromRelativeContextPointer(UnsafePointer<RelativeDirectPointer>(OpaquePointer(data)))!;
     }
+    // method
+    var method: OpaquePointer { mutating get { Self.getMethod(&self); } }
     static func getMethod(_ data: UnsafePointer<MethodOverrideDescriptor>) -> OpaquePointer {
         return DDSwiftRuntime.getPointerFromRelativeContextPointer(UnsafePointer<RelativeDirectPointer>(OpaquePointer(data)).advanced(by:1))!;
     }
+    // impl
+    var impl: OpaquePointer { mutating get { Self.getImpl(&self); } }
     static func getImpl(_ data: UnsafePointer<MethodOverrideDescriptor>) -> OpaquePointer {
         return DDSwiftRuntime.getPointerFromRelativeDirectPointer(UnsafePointer<RelativeDirectPointer>(OpaquePointer(data)).advanced(by:2))!;
     }
@@ -416,23 +511,46 @@ struct CanonicalSpecializedMetadatasCachingOnceToken {
     let token: RelativeDirectPointer;
 };
 
+
+protocol ObjcClassKind {
+}
+extension ObjcClassKind {
+    // name
+    var name: String { mutating get { Self.getName(&self); } }
+    static func getName<T : ObjcClassKind>(_ cls: UnsafePointer<T>) -> String {
+        return String.init(cString:class_getName(unsafeBitCast(cls, to:AnyClass.self)));
+    }
+}
+
 /***
  * AnyClassMetadata
  ***/
 struct AnyClassMetadata {
-    let isa: Pointer;
-    let superclass: Pointer;
+    let isa: OpaquePointer;
+    let superclass: OpaquePointer;
     let cache0: uintptr_t;
     let cache1: uintptr_t;
     let ro: uintptr_t;
 };
 
+extension AnyClassMetadata : ObjcClassKind {
+    var isSwiftMetadata: Bool {
+        get {
+            if (self.ro & (1<<1) > 0) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+    }
+}
+
 /***
  * ClassMetadata
  ***/
 struct ClassMetadata {
-    let isa: Pointer;
-    let superclass: Pointer;
+    fileprivate let _isa: OpaquePointer;
+    fileprivate let _superclass: OpaquePointer;
     let cache0: uintptr_t;
     let cache1: uintptr_t;
     let ro: uintptr_t;
@@ -447,3 +565,13 @@ struct ClassMetadata {
     let ivarDestroyer: Pointer;
     // functin list
 };
+
+extension ClassMetadata : ObjcClassKind {
+    var descriptor: UnsafePointer<ClassDescriptor> { get { return UnsafePointer<ClassDescriptor>(bitPattern:self.description)!; } }
+    // functionTable
+    var functionTable: UnsafeBufferPointer<OpaquePointer> { mutating get { return Self.getFunctionTable(&self); } }
+    static func getFunctionTable(_ cls: UnsafePointer<ClassMetadata>) -> UnsafeBufferPointer<OpaquePointer> {
+        let size = (cls.pointee.classSize - 80 - cls.pointee.classAddressPoint) / 8;
+        return UnsafeBufferPointer.init(start:UnsafePointer<OpaquePointer>.init(OpaquePointer(cls.advanced(by:1))), count:Int(size));
+    }
+}
