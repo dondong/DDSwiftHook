@@ -30,7 +30,7 @@ class DDSwiftRuntime {
         return UnsafeRawPointer.init(tmpValPtr).load(as:T.self);
     }
     
-    fileprivate static func getPointerFromRelativeContextPointer(_ ptr: UnsafePointer<RelativeContextPointer>) -> OpaquePointer? {
+    static func getPointerFromRelativeContextPointer(_ ptr: UnsafePointer<RelativeContextPointer>) -> OpaquePointer? {
         if (0 != ptr.pointee) {
             if ((ptr.pointee & 1) != 0) {
                 return UnsafePointer<OpaquePointer>(OpaquePointer(bitPattern:Int(bitPattern:ptr) + Int(ptr.pointee & ~1)))?.pointee;
@@ -42,7 +42,7 @@ class DDSwiftRuntime {
         }
     }
     
-    fileprivate static func getPointerFromRelativeDirectPointer(_ ptr: UnsafePointer<RelativeDirectPointer>, _ isPointer: Bool = false) -> OpaquePointer? {
+    static func getPointerFromRelativeDirectPointer(_ ptr: UnsafePointer<RelativeDirectPointer>, _ isPointer: Bool = false) -> OpaquePointer? {
         if (0 != ptr.pointee) {
             return OpaquePointer(bitPattern:Int(bitPattern:ptr) + Int(ptr.pointee));
         } else {
@@ -50,86 +50,7 @@ class DDSwiftRuntime {
         }
     }
 }
-extension MetadataKind {
-    var isHeapMetadataKind: Bool { get { return (self.rawValue & MetadataKindIsNonHeap) == 0; } }
-    var isTypeMetadataKind: Bool { get { return (self.rawValue & MetadataKindIsNonType) == 0; } }
-    var isRuntimePrivateMetadataKind: Bool { get { return (self.rawValue & MetadataKindIsRuntimePrivate) != 0; } }
-}
 
-extension HeapMetadata {
-    static let LastEnumerated: UInt = 0x7FF;
-    var enumeratedMetadataKind: MetadataKind {
-        get {
-            if (self.kind > HeapMetadata.LastEnumerated) {
-                return .Class;
-            }
-            return MetadataKind(rawValue:UInt32(self.kind & HeapMetadata.LastEnumerated)) ?? .Class;
-        }
-    }
-    var isClassObject: Bool {
-        get {
-            return self.enumeratedMetadataKind == .Class;
-        }
-    }
-    var isAnyExistentialType: Bool {
-        get {
-            switch (self.enumeratedMetadataKind) {
-            case .ExistentialMetatype, .Existential:
-                return true;
-            default:
-                return false;
-            }
-        }
-    }
-    var isAnyClass: Bool {
-        get {
-            switch (self.enumeratedMetadataKind) {
-            case .Class, .ObjCClassWrapper, .ForeignClass:
-                return true;
-            default:
-                return false;
-            }
-        }
-    }
-}
->>>>>>> e39f9270a1a022daade5f6be44344af7e1af64b7
-
-extension ContextDescriptorFlags {
-    var kind: ContextDescriptorKind { get { return ContextDescriptorKind(rawValue:UInt8(self.value & 0x1F)) ?? .Module; } }
-    var isGeneric: Bool { get { return (self.value & 0x80) != 0; } }
-    var isUnique: Bool { get { return (self.value & 0x40) != 0; } }
-    var version: UInt8 { get { return UInt8((self.value >> 8) & 0xFF); } }
-    var kindSpecificFlags: UInt16 { get { return UInt16((self.value >> 16) & 0xFFFF); } }
-    var metadataInitialization: MetadataInitializationKind { get { return MetadataInitializationKind(rawValue:UInt8(self.kindSpecificFlags & 0x3)) ?? .NoMetadataInitialization } }
-    var hasResilientSuperclass: Bool { get { return (self.kindSpecificFlags & 0x2000) != 0; } }
-    var hasVTable: Bool { get { return (self.kindSpecificFlags & 0x8000) != 0; } }
-    var hasOverrideTable: Bool { get { return (self.kindSpecificFlags & 0x4000) != 0; } }
-}
-
-extension MethodDescriptorFlags {
-    var kind: MethodDescriptorKind { get { return MethodDescriptorKind(rawValue:UInt8(self.value & 0x0F)) ?? .Method; } }
-    var isDynamic: Bool { get { return (self.value & 0x20) != 0; } }
-    var isInstance: Bool { get { return (self.value & 0x10) != 0; } }
-    var isAsync: Bool { get { return (self.value & 0x40) != 0; } }
-}
-
-extension MethodDescriptor {
-    static func getImpl(_ data: UnsafePointer<MethodDescriptor>) -> OpaquePointer {
-        return DDSwiftRuntime.getPointerFromRelativeDirectPointer(UnsafePointer<RelativeDirectPointer>(OpaquePointer(data)).advanced(by:1))!;
-    }
-}
-
-extension MethodOverrideDescriptor {
-    static func getClass(_ data: UnsafePointer<MethodOverrideDescriptor>) -> OpaquePointer {
-        return DDSwiftRuntime.getPointerFromRelativeContextPointer(UnsafePointer<RelativeDirectPointer>(OpaquePointer(data)))!;
-    }
-    static func getMethod(_ data: UnsafePointer<MethodOverrideDescriptor>) -> OpaquePointer {
-        return DDSwiftRuntime.getPointerFromRelativeContextPointer(UnsafePointer<RelativeDirectPointer>(OpaquePointer(data)).advanced(by:1))!;
-    }
-    static func getImpl(_ data: UnsafePointer<MethodOverrideDescriptor>) -> OpaquePointer {
-        return DDSwiftRuntime.getPointerFromRelativeDirectPointer(UnsafePointer<RelativeDirectPointer>(OpaquePointer(data)).advanced(by:2))!;
-    }
-}
 
 protocol TypeContextClassDescriptorKind {
     var flag: ContextDescriptorFlags { get };
