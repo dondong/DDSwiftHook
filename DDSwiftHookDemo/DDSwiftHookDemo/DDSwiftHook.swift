@@ -37,6 +37,7 @@ class DDSwiftHook {
     }
     
     public static func test() {
+        let _ = DDSwiftRuntime.getAllSwiftTypeList();
 //        let t = TestObject.init();
 //        let o = unsafeBitCast(t, to:UnsafePointer<HeapObject>.self);
 //        let v = UnsafeMutablePointer<HeapMetadata>(OpaquePointer(o.pointee.metadata)).pointee.valueWitnesses;

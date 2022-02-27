@@ -12,17 +12,34 @@ class DDSwiftRuntime {
     static func getAllSwiftTypeList() -> [UnsafePointer<TypeContextDescriptor>] {
         var list = [UnsafePointer<TypeContextDescriptor>]();
         for i in 0..<_dyld_image_count() {
-            let header = unsafeBitCast(_dyld_get_image_header(i), to:UnsafePointer<mach_header_64>.self);
+            list.append(contentsOf:Self.getSwiftTypeList(i));
+        }
+        return list;
+    }
+    
+    static func getMainSwiftTypeList() -> [UnsafePointer<TypeContextDescriptor>] {
+        for i in 0..<_dyld_image_count() {
+            let header = _dyld_get_image_header(i);
+            if (header!.pointee.filetype == MH_EXECUTE) {
+                return Self.getSwiftTypeList(i);
+            }
+        }
+        return [UnsafePointer<TypeContextDescriptor>]();
+    }
+    
+    static func getSwiftTypeList(_ imageIndex: UInt32) -> [UnsafePointer<TypeContextDescriptor>] {
+        var list = [UnsafePointer<TypeContextDescriptor>]();
+        if (imageIndex < _dyld_image_count()) {
+            let header = unsafeBitCast(_dyld_get_image_header(imageIndex), to:UnsafePointer<mach_header_64>.self);
             var size: UInt = 0;
-            guard let sect = getsectiondata(header, "__TEXT", "__swift5_types", &size) else { continue; }
+            guard let sect = getsectiondata(header, "__TEXT", "__swift5_types", &size) else { return list; }
             let ptr = UnsafePointer<RelativeDirectPointer>(OpaquePointer(sect));
             size = size / UInt(MemoryLayout<RelativeDirectPointer>.size);
-            for j in 0..<size {
-                guard let p = Self.getPointerFromRelativeDirectPointer(ptr.advanced(by:Int(j))) else { continue; }
+            for i in 0..<size {
+                guard let p = Self.getPointerFromRelativeDirectPointer(ptr.advanced(by:Int(i))) else { continue; }
                 let type = UnsafeMutablePointer<TypeContextDescriptor>(p);
                 list.append(type);
             }
-            break;
         }
         return list;
     }

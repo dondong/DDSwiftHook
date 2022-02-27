@@ -156,8 +156,6 @@ struct HeapObject {
 
 // MARK: -
 // MARK: ClassMetadata
-
-
 protocol ObjcClassKind {
 }
 extension ObjcClassKind {

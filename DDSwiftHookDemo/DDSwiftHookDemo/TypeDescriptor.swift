@@ -406,13 +406,212 @@ struct TypeGenericContextDescriptorHeader {
 
 // MARK: -
 // MARK: Append
+enum GenericRequirementKind : UInt8 {
+    case ProtocolDescriptor = 0;
+    case SameType = 1;
+    case BaseClass = 2;
+    case SameConformance = 3;
+    case Unknown = 0x1E;
+    case Layout = 0x1F;
+};
+
+struct GenericRequirementFlags {
+    fileprivate let value: UInt32;
+}
+
+extension GenericRequirementFlags {
+    var hasKeyArgument: Bool { get { return (self.value & 0x80) != 0; } }
+    var hasExtraArgument: Bool { get { return (self.value & 0x40) != 0; } }
+    var kind: GenericRequirementKind { get { return GenericRequirementKind(rawValue:UInt8(self.value & 0x1F)) ?? .Unknown; } }
+}
+
 /***
  * GenericRequirementDescriptor
  ***/
 struct GenericRequirementDescriptor {
-    let flags: UInt32;
+    let flags: GenericRequirementFlags;
     let param: RelativeDirectPointer;
-    let layout: RelativeDirectPointer;
+    fileprivate let _layout: Int32;
+}
+
+struct RelativeTargetProtocolDescriptorPointer {
+    fileprivate let _pointer : RelativeDirectPointer;
+}
+
+extension RelativeTargetProtocolDescriptorPointer {
+    fileprivate static func mask() -> Int32 {
+        return Int32(MemoryLayout<RelativeDirectPointer>.alignment - 1);
+    }
+    fileprivate static func pointer(_ ptr: UnsafePointer<RelativeTargetProtocolDescriptorPointer>, _ offset: Int32) -> OpaquePointer? {
+        return OpaquePointer(bitPattern:Int(bitPattern:ptr) + Int(offset));
+    }
+    var pointer: OpaquePointer? {
+        mutating get {
+            let offset = (self._pointer & ~RelativeTargetProtocolDescriptorPointer.mask());
+            if (self._pointer == 0) { return nil; }
+            return RelativeTargetProtocolDescriptorPointer.pointer(&self, offset);
+        }
+    }
+    var isObjC: Bool {
+        return (self._pointer & RelativeTargetProtocolDescriptorPointer.mask()) != 0;
+    }
+}
+
+typealias GenericRequirementLayoutKind = RelativeDirectPointer;
+extension GenericRequirementDescriptor {
+    var kind: GenericRequirementKind { get { return self.flags.kind; } }
+    // param
+    var getParam: String { mutating get { return Self.getName(&self); } }
+    static func getName(_ data: UnsafePointer<GenericRequirementDescriptor>) -> String {
+        let ptr = DDSwiftRuntime.getPointerFromRelativeDirectPointer(UnsafePointer<RelativeDirectPointer>(OpaquePointer(data)).advanced(by:1))!;
+        return String(cString:UnsafePointer<CChar>(ptr));
+    }
+    // protocol
+//    var protocolDescriptor: UnsafePointer<ProtocolDescriptor>? { mutating get { return Self.getProtocolDescriptor(&self); } }
+//    static func getProtocolDescriptor(_ data: UnsafePointer<GenericRequirementDescriptor>) -> UnsafePointer<ProtocolDescriptor>? {
+//        if (data.pointee.kind == .ProtocolDescriptor) {
+//            let ptr = DDSwiftRuntime.getPointerFromRelativeDirectPointer(UnsafePointer<RelativeDirectPointer>(OpaquePointer(data)).advanced(by:2))!;
+//            return Optional(UnsafePointer<ProtocolDescriptor>(ptr));
+//        } else {
+//            return nil;
+//        }
+//    }
+    // mangledTypeName
+    var mangledTypeName: String? { mutating get { return Self.getMangledTypeName(&self); } }
+    static func getMangledTypeName(_ data: UnsafePointer<GenericRequirementDescriptor>) -> String? {
+        if (data.pointee.kind == .SameType || data.pointee.kind == .BaseClass) {
+            let ptr = DDSwiftRuntime.getPointerFromRelativeDirectPointer(UnsafePointer<RelativeDirectPointer>(OpaquePointer(data)).advanced(by:2))!;
+            return Optional(String(cString:UnsafePointer<CChar>(ptr)));
+        } else {
+            return nil;
+        }
+    }
+    // conformance
+    var conformance: UnsafePointer<ProtocolConformanceDescriptor>? { mutating get { return Self.getConformance(&self); } }
+    static func getConformance(_ data: UnsafePointer<GenericRequirementDescriptor>) -> UnsafePointer<ProtocolConformanceDescriptor>? {
+        if (data.pointee.kind == .SameConformance) {
+            let ptr = DDSwiftRuntime.getPointerFromRelativeContextPointer(UnsafePointer<RelativeContextPointer>(OpaquePointer(data)).advanced(by:2))!;
+            return Optional(UnsafePointer<ProtocolConformanceDescriptor>(ptr));
+        } else {
+            return nil;
+        }
+    }
+    // layout
+    var layout: GenericRequirementLayoutKind? {
+        get {
+            if (self.kind == .Layout) {
+                return Optional(self._layout);
+            } else {
+                return nil;
+            }
+        }
+    }
+    var hasKnownKind: Bool {
+        get {
+            var ret: Bool = false;
+            switch(self.kind) {
+            case .BaseClass, .Layout, .ProtocolKind, .SameConformance, .SameType:
+                ret = true;
+            default:
+                ret = false;
+            }
+            return ret;
+        }
+    }
+}
+
+/***
+ * ConformanceFlags
+ ***
+ */
+enum TypeReferenceKind : UInt16 {
+    case DirectTypeDescriptor = 0x00;
+    case IndirectTypeDescriptor = 0x01;
+    case DirectObjCClassName = 0x02;
+    case IndirectObjCClass = 0x03;
+//    First_Kind = DirectTypeDescriptor,
+//    Last_Kind = IndirectObjCClass,
+};
+
+struct ConformanceFlags {
+    fileprivate let _value: UInt32;
+}
+
+extension ConformanceFlags {
+    fileprivate static let TypeMetadataKindMask: UInt32 = 0x7 << 3;
+    fileprivate static let TypeMetadataKindShift: UInt32 = 3;
+    var typeReferenceKind: TypeReferenceKind { get { return TypeReferenceKind(rawValue:UInt16((self._value & Self.TypeMetadataKindMask) >> Self.TypeMetadataKindShift)) ?? .DirectTypeDescriptor; } }
+}
+
+/***
+ * TypeReference
+ ***/
+struct TypeReference {
+    fileprivate let _value: RelativeDirectPointer;
+}
+
+extension TypeReference {
+    fileprivate static func getPointer(_ ptr: UnsafePointer<TypeReference>) -> OpaquePointer {
+        return DDSwiftRuntime.getPointerFromRelativeDirectPointer(UnsafePointer<RelativeDirectPointer>(OpaquePointer(ptr)))!;
+    }
+    // TypeDescriptor
+    mutating func getTypeDescriptor(_ kind: TypeReferenceKind) -> UnsafePointer<ContextDescriptor>? {
+        if (kind == .DirectTypeDescriptor) {
+            return Optional(UnsafePointer<ContextDescriptor>(Self.getPointer(&self)));
+        } else if (kind == .IndirectTypeDescriptor) {
+            return Optional(UnsafePointer<UnsafePointer<ContextDescriptor>>(Self.getPointer(&self)).pointee);
+        } else {
+            return nil;
+        }
+    }
+    // IndirectObjCClass
+    mutating func getIndirectObjCClass(_ kind: TypeReferenceKind) -> UnsafePointer<ClassMetadata>? {
+        if (kind == .IndirectObjCClass) {
+            return Optional(UnsafePointer<ClassMetadata>(Self.getPointer(&self)));
+        } else {
+            return nil;
+        }
+    }
+    // DirectObjCClassName
+    mutating func getDirectObjCClassName(_ kind: TypeReferenceKind) -> String? {
+        if (kind == .DirectObjCClassName) {
+            return Optional(String(cString:UnsafePointer<CChar>(Self.getPointer(&self))));
+        } else {
+            return nil;
+        }
+    }
+}
+
+/***
+ * WitnessTable
+ ***/
+struct WitnessTable {
+    let description: UnsafePointer<ProtocolConformanceDescriptor>;
+}
+
+/***
+ * ProtocolConformanceDescriptor
+ ***/
+struct ProtocolConformanceDescriptor {
+    fileprivate let _protocol: RelativeContextPointer;
+    let typeRef: TypeReference;
+    fileprivate let _witnessTablePattern : RelativeDirectPointer;
+    let flags: ConformanceFlags;
+}
+
+extension ProtocolConformanceDescriptor {
+    // protocol
+    var protocolDescriptor: UnsafePointer<ProtocolDescriptor> { mutating get { return Self.getProtocolDescriptor(&self); } }
+    static func getProtocolDescriptor(_ data: UnsafePointer<ProtocolConformanceDescriptor>) -> UnsafePointer<ProtocolDescriptor> {
+        let ptr = DDSwiftRuntime.getPointerFromRelativeContextPointer(UnsafePointer<RelativeDirectPointer>(OpaquePointer(data)))!;
+        return UnsafePointer<ProtocolDescriptor>(ptr);
+    }
+    // witnessTablePattern
+    var witnessTablePattern: UnsafePointer<WitnessTable> { mutating get { return Self.getWitnessTablePattern(&self); } }
+    static func getWitnessTablePattern(_ data: UnsafePointer<ProtocolConformanceDescriptor>) -> UnsafePointer<WitnessTable> {
+        let ptr = DDSwiftRuntime.getPointerFromRelativeDirectPointer(UnsafePointer<RelativeDirectPointer>(OpaquePointer(data)).advanced(by:2))!;
+        return UnsafePointer<WitnessTable>(ptr);
+    }
 }
 
 /***
