@@ -510,7 +510,7 @@ extension GenericRequirementDescriptor {
         get {
             var ret: Bool = false;
             switch(self.kind) {
-            case .BaseClass, .Layout, .ProtocolKind, .SameConformance, .SameType:
+            case .BaseClass, .Layout, .ProtocolDescriptor, .SameConformance, .SameType:
                 ret = true;
             default:
                 ret = false;
