@@ -7,15 +7,25 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A3AECC872826C98200E6541E /* DDSwiftHook.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3AECC862826C98200E6541E /* DDSwiftHook.swift */; };
+		A3AECC892826CAB500E6541E /* DDTestDemo.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3AECC882826CAB500E6541E /* DDTestDemo.swift */; };
+		A3AECC8B2826CAE600E6541E /* DDTestDemoHook.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3AECC8A2826CAE600E6541E /* DDTestDemoHook.swift */; };
 		A3FA69CF27D8E6BB007D51CC /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3FA69CE27D8E6BB007D51CC /* AppDelegate.swift */; };
 		A3FA69D127D8E6BB007D51CC /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3FA69D027D8E6BB007D51CC /* SceneDelegate.swift */; };
 		A3FA69D327D8E6BB007D51CC /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3FA69D227D8E6BB007D51CC /* ViewController.swift */; };
 		A3FA69D627D8E6BB007D51CC /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A3FA69D427D8E6BB007D51CC /* Main.storyboard */; };
 		A3FA69D827D8E6BD007D51CC /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A3FA69D727D8E6BD007D51CC /* Assets.xcassets */; };
 		A3FA69DB27D8E6BD007D51CC /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A3FA69D927D8E6BD007D51CC /* LaunchScreen.storyboard */; };
+		FCF4F5826AEADE62C2224F3D /* libPods-DDSwiftHookDemo.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 719CA210EE87C2BDA2684506 /* libPods-DDSwiftHookDemo.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		32D45199D82A400A87A816C2 /* Pods-DDSwiftHookDemo.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-DDSwiftHookDemo.release.xcconfig"; path = "Target Support Files/Pods-DDSwiftHookDemo/Pods-DDSwiftHookDemo.release.xcconfig"; sourceTree = "<group>"; };
+		719CA210EE87C2BDA2684506 /* libPods-DDSwiftHookDemo.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-DDSwiftHookDemo.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		A237A5887B1D6C865BE3F6B5 /* Pods-DDSwiftHookDemo.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-DDSwiftHookDemo.debug.xcconfig"; path = "Target Support Files/Pods-DDSwiftHookDemo/Pods-DDSwiftHookDemo.debug.xcconfig"; sourceTree = "<group>"; };
+		A3AECC862826C98200E6541E /* DDSwiftHook.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDSwiftHook.swift; sourceTree = "<group>"; };
+		A3AECC882826CAB500E6541E /* DDTestDemo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDTestDemo.swift; sourceTree = "<group>"; };
+		A3AECC8A2826CAE600E6541E /* DDTestDemoHook.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDTestDemoHook.swift; sourceTree = "<group>"; };
 		A3FA69CB27D8E6BB007D51CC /* DDSwiftHookDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DDSwiftHookDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A3FA69CE27D8E6BB007D51CC /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		A3FA69D027D8E6BB007D51CC /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -31,17 +41,29 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FCF4F5826AEADE62C2224F3D /* libPods-DDSwiftHookDemo.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		A3AECC852826C95600E6541E /* Framework */ = {
+			isa = PBXGroup;
+			children = (
+				A3AECC862826C98200E6541E /* DDSwiftHook.swift */,
+			);
+			name = Framework;
+			path = ../../Framework;
+			sourceTree = "<group>";
+		};
 		A3FA69C227D8E6BB007D51CC = {
 			isa = PBXGroup;
 			children = (
 				A3FA69CD27D8E6BB007D51CC /* DDSwiftHookDemo */,
 				A3FA69CC27D8E6BB007D51CC /* Products */,
+				B24AA6BB55EA71641FB67326 /* Pods */,
+				D98ABE71C0BC1D74C860D62B /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -56,6 +78,9 @@
 		A3FA69CD27D8E6BB007D51CC /* DDSwiftHookDemo */ = {
 			isa = PBXGroup;
 			children = (
+				A3AECC852826C95600E6541E /* Framework */,
+				A3AECC882826CAB500E6541E /* DDTestDemo.swift */,
+				A3AECC8A2826CAE600E6541E /* DDTestDemoHook.swift */,
 				A3FA69CE27D8E6BB007D51CC /* AppDelegate.swift */,
 				A3FA69D027D8E6BB007D51CC /* SceneDelegate.swift */,
 				A3FA69D227D8E6BB007D51CC /* ViewController.swift */,
@@ -67,6 +92,23 @@
 			path = DDSwiftHookDemo;
 			sourceTree = "<group>";
 		};
+		B24AA6BB55EA71641FB67326 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				A237A5887B1D6C865BE3F6B5 /* Pods-DDSwiftHookDemo.debug.xcconfig */,
+				32D45199D82A400A87A816C2 /* Pods-DDSwiftHookDemo.release.xcconfig */,
+			);
+			path = Pods;
+			sourceTree = "<group>";
+		};
+		D98ABE71C0BC1D74C860D62B /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				719CA210EE87C2BDA2684506 /* libPods-DDSwiftHookDemo.a */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -74,6 +116,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = A3FA69DF27D8E6BD007D51CC /* Build configuration list for PBXNativeTarget "DDSwiftHookDemo" */;
 			buildPhases = (
+				62B290BD9E0E9814F8F69C00 /* [CP] Check Pods Manifest.lock */,
 				A3FA69C727D8E6BB007D51CC /* Sources */,
 				A3FA69C827D8E6BB007D51CC /* Frameworks */,
 				A3FA69C927D8E6BB007D51CC /* Resources */,
@@ -133,13 +176,41 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		62B290BD9E0E9814F8F69C00 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-DDSwiftHookDemo-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		A3FA69C727D8E6BB007D51CC /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				A3FA69D327D8E6BB007D51CC /* ViewController.swift in Sources */,
+				A3AECC8B2826CAE600E6541E /* DDTestDemoHook.swift in Sources */,
 				A3FA69CF27D8E6BB007D51CC /* AppDelegate.swift in Sources */,
+				A3AECC892826CAB500E6541E /* DDTestDemo.swift in Sources */,
+				A3AECC872826C98200E6541E /* DDSwiftHook.swift in Sources */,
 				A3FA69D127D8E6BB007D51CC /* SceneDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -284,6 +355,7 @@
 		};
 		A3FA69E027D8E6BD007D51CC /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = A237A5887B1D6C865BE3F6B5 /* Pods-DDSwiftHookDemo.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -297,6 +369,7 @@
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -312,6 +385,7 @@
 		};
 		A3FA69E127D8E6BD007D51CC /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 32D45199D82A400A87A816C2 /* Pods-DDSwiftHookDemo.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -325,6 +399,7 @@
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

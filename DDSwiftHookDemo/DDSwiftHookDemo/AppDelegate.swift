@@ -14,6 +14,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
+        DDTestDemoHook.enableHook();
+        ViewControllerHook.enableHook();
+        let obj = DDTestNewDemo();
+        obj.myFunction();
+        obj.myFunction2(a:10);
         return true
     }
 
