@@ -16,7 +16,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Override point for customization after application launch.
         DDTestDemoHook.enableHook();
         ViewControllerHook.enableHook();
-        let obj = DDTestNewDemo();
+        let obj = DDTestDemo();
         obj.myFunction();
         obj.myFunction2(a:10);
         return true

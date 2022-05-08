@@ -19,10 +19,14 @@ class ViewControllerHook: ViewController, DDSwiftHookable {
         super.viewDidLoad()
         print("ViewControllerHook.viewDidLoad");
     }
-
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated);
+        print("ViewControllerHook.viewWillAppear animated:\(animated)");
+    }
+    
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated);
         print("ViewControllerHook.viewDidAppear animated:\(animated)");
-        
     }
 }
