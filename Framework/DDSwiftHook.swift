@@ -17,17 +17,21 @@ extension DDSwiftHookable {
     static func enableHook() {
         let cls = Self.self;
         let ptr = unsafeBitCast(cls, to: UnsafePointer<ClassMetadata>.self);
-        let tempPtr = UnsafePointer<ClassMetadata>(OpaquePointer(ptr.pointee.superclass));
+        let tempPtr = UnsafePointer<AnyClassMetadata>(OpaquePointer(ptr.pointee.superclass));
         let tempCls: AnyClass = unsafeBitCast(tempPtr, to:AnyClass.self);
-        let superPtr = UnsafePointer<ClassMetadata>(OpaquePointer(tempPtr.pointee.superclass));
+        let superPtr = UnsafePointer<AnyClassMetadata>(OpaquePointer(tempPtr.pointee.superclass));
         let superCls: AnyClass = unsafeBitCast(superPtr, to:AnyClass.self);
         
         // hook swift vtable method
-        let offset = MemoryLayout<ClassMetadata>.size;
-        let size = Int(superPtr.pointee.classSize) - Int(superPtr.pointee.classAddressPoint) - offset;
-        let srcPtr = UnsafeRawPointer(ptr).advanced(by:offset);
-        let dstPtr = UnsafeMutableRawPointer(OpaquePointer(superPtr)).advanced(by:offset);
-        dstPtr.copyMemory(from:srcPtr, byteCount:size);
+        if (false == superPtr.pointee.isPureObjC) {
+            let superSwiftPtr = UnsafeMutablePointer<ClassMetadata>(OpaquePointer(superPtr));
+            let vtableRanges = superSwiftPtr.pointee.vtableRanges;
+            for range in vtableRanges {
+                let srcPtr = UnsafeRawPointer(ptr).advanced(by:range.location);
+                let dstPtr = UnsafeMutableRawPointer(OpaquePointer(superPtr)).advanced(by:range.location);
+                dstPtr.copyMemory(from:srcPtr, byteCount:range.length * MemoryLayout<OpaquePointer>.size);
+            }
+        }
         
         // hook objective-c method
         var srcObjcSize: UInt32 = 0;
@@ -59,11 +63,15 @@ extension DDSwiftHookable {
 //        let superCls: AnyClass = unsafeBitCast(superPtr, to:AnyClass.self);
 //
 //        // hook swift vtable method
-//        let offset = MemoryLayout<ClassMetadata>.size;
-//        let size = Int(superPtr.pointee.classSize) - Int(superPtr.pointee.classAddressPoint) - offset;
-//        let srcPtr = UnsafeRawPointer(ptr).advanced(by:offset);
-//        let dstPtr = UnsafeMutableRawPointer(OpaquePointer(superPtr)).advanced(by:offset);
-//        dstPtr.copyMemory(from:srcPtr, byteCount:size);
+//        if (false == superPtr.pointee.isPureObjC) {
+//            let superSwiftPtr = UnsafeMutablePointer<ClassMetadata>(OpaquePointer(superPtr));
+//            let vtableRanges = superSwiftPtr.pointee.vtableRanges;
+//            for range in vtableRanges {
+//                let srcPtr = UnsafeRawPointer(ptr).advanced(by:range.location);
+//                let dstPtr = UnsafeMutableRawPointer(OpaquePointer(superPtr)).advanced(by:range.location);
+//                dstPtr.copyMemory(from:srcPtr, byteCount:range.length * MemoryLayout<OpaquePointer>.size);
+//            }
+//        }
 //
 //        // hook objective-c method
 //        var srcObjcSize: UInt32 = 0;
