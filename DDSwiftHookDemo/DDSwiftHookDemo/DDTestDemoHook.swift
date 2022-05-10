@@ -8,29 +8,29 @@
 import Foundation
 import UIKit
 
-class DDTestDemoHook1 : DDTestDemo {
+class DDTestDemoTemp : DDTestDemo {
 }
 
-class DDTestDemoHook : DDTestDemoHook1, DDSwiftHookable {
+class DDTestDemoHook : DDTestDemoTemp, DDSwiftHookable {
     override func myFunction() {
         super.myFunction();
         print("DDTestDemoHook.myFunction");
     }
 }
 
-class ViewControllerHook1 : ViewController {
+class ViewControllerTemp : ViewController {
 }
 
-class ViewControllerHook: ViewControllerHook1, DDSwiftHookable {
+class ViewControllerHook: ViewControllerTemp, DDSwiftHookable {
     override func viewDidLoad() {
         super.viewDidLoad()
         print("ViewControllerHook.viewDidLoad");
     }
     
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated);
-        print("ViewControllerHook.viewWillAppear animated:\(animated)");
-    }
+//    override func viewWillAppear(_ animated: Bool) {
+//        super.viewWillAppear(animated);
+//        print("ViewControllerHook.viewWillAppear animated:\(animated)");
+//    }
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated);
@@ -38,10 +38,10 @@ class ViewControllerHook: ViewControllerHook1, DDSwiftHookable {
     }
 }
 
-class AppDelegateHook1 : AppDelegate {
+class AppDelegateTemp : AppDelegate {
 }
 
-class AppDelegateHook : AppDelegateHook1, DDSwiftHookable {
+class AppDelegateHook : AppDelegateTemp, DDSwiftHookable {
     override func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
          return super.application(application, didFinishLaunchingWithOptions: launchOptions);
     }

@@ -8,6 +8,8 @@
 import Foundation
 import DDSwiftRuntime
 
+
+
 protocol DDSwiftHookable: AnyObject {
 }
 
@@ -34,32 +36,14 @@ extension DDSwiftHookable {
                 let srcMethod = srcObjcMethodList.advanced(by:Int(i)).pointee;
                 let sel = method_getName(srcMethod);
                 if let dstMethod = class_getInstanceMethod(superCls, sel) {
-                    if let tempMethod = class_getInstanceMethod(tempCls, sel) {
-                        method_setImplementation(tempMethod,
-                                                 method_getImplementation(dstMethod));
-                    } else {
-                        class_addMethod(tempCls,
+                    class_replaceMethod(tempCls,
                                         sel,
                                         method_getImplementation(dstMethod),
                                         method_getTypeEncoding(dstMethod));
-                    }
-                    method_setImplementation(dstMethod,
-                                             method_getImplementation(srcMethod));
-                } else if class_respondsToSelector(superCls, sel) {
-                    var dstMethod: Method? = nil;
-                    var tmpCls: AnyClass = superCls;
-                    while (nil == dstMethod) {
-                        tmpCls = class_getSuperclass(tmpCls)!;
-                        dstMethod = class_getInstanceMethod(tmpCls, sel);
-                    }
-                    class_addMethod(superCls,
-                                    sel,
-                                    method_getImplementation(srcMethod),
-                                    method_getTypeEncoding(srcMethod));
-                    class_addMethod(tempCls,
-                                    sel,
-                                    method_getImplementation(dstMethod!),
-                                    method_getTypeEncoding(dstMethod!));
+                    class_replaceMethod(superCls,
+                                        sel,
+                                        method_getImplementation(srcMethod),
+                                        method_getTypeEncoding(srcMethod));
                 }
             }
             free(srcObjcMethodList);
@@ -90,24 +74,14 @@ extension DDSwiftHookable {
 //                    let srcMethod = srcObjcMethodList.advanced(by:Int(i)).pointee;
 //                    let sel = method_getName(srcMethod);
 //                    if let dstMethod = class_getInstanceMethod(superCls, sel) {
-//                        class_addMethod(fakeSuperCls,
-//                                        sel,
-//                                        method_getImplementation(dstMethod),
-//                                        method_getTypeEncoding(dstMethod));
-//                        method_setImplementation(dstMethod,
-//                                                 method_getImplementation(srcMethod));
-//                    } else if class_respondsToSelector(superCls, sel) {
-//                        var dstMethod: Method? = nil;
-//                        var tmpCls: AnyClass = superCls;
-//                        while (nil == dstMethod) {
-//                            tmpCls = class_getSuperclass(tmpCls)!;
-//                            dstMethod = class_getInstanceMethod(tmpCls, sel);
-//                        }
-//                        class_addMethod(superCls, sel, method_getImplementation(srcMethod), method_getTypeEncoding(srcMethod));
-//                        class_addMethod(fakeSuperCls,
-//                                        sel,
-//                                        method_getImplementation(dstMethod!),
-//                                        method_getTypeEncoding(dstMethod!));
+//                        class_replaceMethod(fakeSuperCls,
+//                                            sel,
+//                                            method_getImplementation(dstMethod),
+//                                            method_getTypeEncoding(dstMethod));
+//                        class_replaceMethod(superCls,
+//                                            sel,
+//                                            method_getImplementation(srcMethod),
+//                                            method_getTypeEncoding(srcMethod));
 //                    }
 //                }
 //                objc_registerClassPair(fakeSuperCls);
