@@ -6,9 +6,9 @@ class TargetClass {
     }
 }
 
-class TargetClassTemp : TargetClass {  // An empty class for save objc origin function
+class TargetClassEmpty : TargetClass {  // An empty class for save objc origin function
 }
-class TargetClassHook : TargetClassTemp, DDSwiftHookable {
+class TargetClassHook : TargetClassEmpty, DDSwiftHookable {
     override func targetFunction() {
         super.targetFunction();  // call origin function
     } 
